@@ -1,0 +1,3 @@
+fr:
+  default_answer: "Je n'ai pas compris votre message"
+  what: 'Le numéro %{from} a écrit "%{message}" au numéro %{to}'

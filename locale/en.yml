@@ -1,0 +1,3 @@
+en:
+  default_answer: "I didn't understand your message"
+  what: 'The phone number %{from} wrote "%{message} to %{to}'
