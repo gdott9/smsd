@@ -1,4 +1,4 @@
-# Smsd
+# SMSd
 
 TODO: Write a gem description
 
@@ -18,7 +18,26 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+```ruby
+#!/usr/bin/env ruby
+
+require 'smsd'
+require 'net/http'
+
+cli = SMSd::CLI.new(ARGV) do
+  machine = SMSd::AnsweringMachine.new(I18n.t(:default_answer))
+
+  machine.add_action(/hello/i, 'Hello !!')
+  machine.add_action(/what/i) do |from, to, message|
+    "The phone number #{from} sent '#{message}' to #{to}"
+  end
+  machine.add_action(/myip/i) do
+    Net::HTTP.get('icanhazip.com', '/').chomp
+  end
+end
+
+cli.run
+```
 
 ## Contributing
 

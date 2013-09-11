@@ -7,20 +7,24 @@ module SMSd
         options = {}
 
         parser = ::OptionParser.new do |opts|
-          opts.banner = "Usage: smsd [options]"
+          opts.banner = 'Usage: smsd [options] MODEM'
 
-          opts.separator ""
-          opts.separator "Specific options:"
+          opts.separator ''
+          opts.separator 'Specific options:'
 
-          opts.on('-l', '--locale LOCALE',
-                  'Define the language of the script') do |locale|
-            options[:locale] = locale.to_sym
+          opts.on('-d', '--[no-]daemonize',
+                  'Run in the background') do |daemon|
+            options[:daemonize] = daemon
           end
 
-          opts.separator ""
-          opts.separator "Common options:"
+          opts.on('-p', '--pin PIN', 'Specify the SIM PIN') do |pin|
+            options[:pin] = pin
+          end
 
-          opts.on('-h', '--help', 'Show this message') do
+          opts.separator ''
+          opts.separator 'Common options:'
+
+          opts.on_tail('-h', '--help', 'Show this message') do
             puts opts
             exit
           end
@@ -31,7 +35,18 @@ module SMSd
           end
         end
 
-        parser.parse!(args)
+        begin
+          parser.parse!(args)
+
+          options[:modem] = args.first
+          raise OptionParser::MissingArgument,
+                'modem not specified' if options[:modem].nil?
+        rescue OptionParser::MissingArgument, OptionParser::InvalidOption => e
+          puts e.message
+          puts parser
+          exit
+        end
+
         options
       end
     end

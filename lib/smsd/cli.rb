@@ -1,25 +1,74 @@
+require 'biju'
+require 'logger'
+
 module SMSd
   class CLI
-    attr_accessor :machine, :options
+    attr_accessor :machine
+    attr_reader :modem, :options, :logger
 
-    def initialize(args)
-      self.options = Options.parse(args)
+    def initialize(args = [], &block)
+      @options = Options.parse(args)
 
-      SMSd.init_i18n
-      SMSd.locale = options[:locale] || :fr
+      self.machine = yield block if block_given?
 
-      define_actions
-
-      puts machine.execute(ARGV[0], ARGV[1], ARGV[2])
+      init_logger
+      @modem = Biju::Hayes.new(options[:modem], pin: options[:pin])
     end
 
-    def define_actions
-      self.machine = AnsweringMachine.new(I18n.t(:default_answer))
+    def run
+      catch_signals
+      Process.daemon if options[:daemonize]
 
-      machine.add_action(/bonjour/i, 'Bonjour !!')
-      machine.add_action(/quoi/i) do |from, to, message|
-        I18n.t(:what, from: from, to: to, message: message)
+      loop do
+        break if @terminate
+
+        modem.messages.each do |sms|
+          handle_message sms
+        end
+
+        sleep 5
       end
+      modem.modem.close
+    end
+
+    private
+
+    def init_logger
+      @logger = Logger.new(
+        Util::MultiIO.new(STDOUT, File.open('debug.log', 'a')))
+
+      logger.formatter = proc do |severity, datetime, progrname, msg|
+        "#{datetime} [#{severity}] #{msg}\n"
+      end
+    end
+
+    def catch_signals
+      signal_term =  proc { @terminate = true }
+      Signal.trap('SIGTERM', signal_term)
+      Signal.trap('SIGINT', signal_term)
+    end
+
+    def handle_message(sms)
+      if sms.valid?
+        send_answer(sms)
+      else
+        logger.warn "#{sms}: #{sms.errors.join(',')}"
+      end
+      modem.delete(sms.id)
+    end
+
+    def send_answer(sms)
+      message = machine.execute(sms.phone_number, nil, sms.message)
+
+      if message.nil? || message == ''
+        log = 'Empty answer'
+      else
+        modem.send(Biju::Sms.new(
+          phone_number: sms.phone_number, message: message))
+        log = message
+      end
+
+      logger.info "#{sms}: #{log}"
     end
   end
 end

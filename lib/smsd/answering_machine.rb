@@ -8,7 +8,7 @@ module SMSd
     end
 
     def add_action(regexp, answer = nil, &block)
-      self.actions << Action.new(regexp, answer, &block)
+      actions << Action.new(regexp, answer, &block)
     end
 
     def execute(from, to, message)
