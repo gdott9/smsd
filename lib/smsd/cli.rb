@@ -35,10 +35,11 @@ module SMSd
 
     def init_logger
       @logger = Logger.new(
-        Util::MultiIO.new(STDOUT, File.open('debug.log', 'a')))
+        Util::MultiIO.new(STDOUT,
+                          File.open(@options[:logfile] || 'smsd.log', 'a')))
 
       logger.formatter = proc do |severity, datetime, progrname, msg|
-        "#{datetime} [#{severity}] #{msg}\n"
+        "#{$PROGRAM_NAME}: #{datetime} [#{severity}] #{msg}\n"
       end
     end
 

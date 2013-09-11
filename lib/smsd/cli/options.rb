@@ -17,6 +17,10 @@ module SMSd
             options[:daemonize] = daemon
           end
 
+          opts.on('-l', '--log-file', 'Define log file') do |logfile|
+            options[:logfile] = logfile
+          end
+
           opts.on('-p', '--pin PIN', 'Specify the SIM PIN') do |pin|
             options[:pin] = pin
           end
