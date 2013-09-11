@@ -20,13 +20,13 @@ module SMSd
       Process.daemon if options[:daemonize]
 
       loop do
+        sleep 5
         break if @terminate
 
         modem.messages.each do |sms|
-          handle_message sms
+          handle_message sms unless check_number(
+            sms.phone_number, sms.type_of_address)
         end
-
-        sleep 5
       end
       modem.modem.close
     end
@@ -47,6 +47,21 @@ module SMSd
       signal_term =  proc { @terminate = true }
       Signal.trap('SIGTERM', signal_term)
       Signal.trap('SIGINT', signal_term)
+    end
+
+    def check_number(number, type_of_address)
+      phone_numbers.each do |phone_number|
+        return true if phone_number[:number] == number &&
+          phone_number[:type_of_address] == type_of_address
+      end unless phone_numbers.nil?
+
+      false
+    end
+
+    def phone_numbers
+      @phone_numbers ||= modem.phone_numbers
+    rescue Biju::AT::CmeError
+      nil
     end
 
     def handle_message(sms)
