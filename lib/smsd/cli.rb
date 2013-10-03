@@ -74,7 +74,8 @@ module SMSd
     end
 
     def send_answer(sms)
-      message = machine.execute(sms.phone_number, nil, sms.message)
+      to = (phone_numbers.empty? ? phone_numbers.first[:number] : nil)
+      message = machine.execute(sms.phone_number, to, sms.message)
 
       if message.nil? || message == ''
         log = 'Empty answer'
