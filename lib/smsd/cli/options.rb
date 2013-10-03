@@ -17,7 +17,7 @@ module SMSd
             options[:daemonize] = daemon
           end
 
-          opts.on('-l', '--log-file', 'Define log file') do |logfile|
+          opts.on('-l', '--log-file FILE', 'Define log file') do |logfile|
             options[:logfile] = logfile
           end
 

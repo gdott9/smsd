@@ -28,7 +28,7 @@ module SMSd
             sms.phone_number, sms.type_of_address)
         end
       end
-      modem.modem.close
+      modem.close
     end
 
     private
@@ -61,7 +61,7 @@ module SMSd
     def phone_numbers
       @phone_numbers ||= modem.phone_numbers
     rescue Biju::AT::CmeError
-      nil
+      []
     end
 
     def handle_message(sms)
