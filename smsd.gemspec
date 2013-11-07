@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = SMSd::VERSION
   spec.authors       = ["Guillaume DOTT"]
   spec.email         = ["guillaume.dott@lafourmi-immo.com"]
-  spec.description   = %q{TODO: Write a gem description}
-  spec.summary       = %q{TODO: Write a gem summary}
+  spec.description   = %q{Automatically answers to SMS using Biju to access your 3G key}
+  spec.summary       = %q{Automatically answers to SMS}
   spec.homepage      = ""
   spec.license       = "AGPL"
 
