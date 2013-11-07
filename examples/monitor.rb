@@ -4,7 +4,9 @@ require 'smsd'
 require 'net/http'
 
 cli = SMSd::CLI.new(ARGV) do
-  machine = SMSd::AnsweringMachine.new(I18n.t(:default_answer))
+  machine = SMSd::AnsweringMachine.new('I did not understand.',
+    too_old: 'Your message is too old',
+    short_number: 'The phone number you are using is too short')
 
   machine.add_action(/ping/i, 'PONG')
   machine.add_action(/free/i) do
@@ -17,4 +19,5 @@ cli = SMSd::CLI.new(ARGV) do
   machine
 end
 
+cli.modem.prefered_storage('SM')
 cli.run

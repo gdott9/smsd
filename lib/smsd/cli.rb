@@ -68,7 +68,7 @@ module SMSd
       if sms.valid?
         send_answer(sms)
       else
-        logger.warn "#{sms}: #{sms.errors.join(',')}"
+        send_errors(sms)
       end
       modem.delete(sms.id)
     end
@@ -77,12 +77,29 @@ module SMSd
       to = (phone_numbers.empty? ? phone_numbers.first[:number] : nil)
       message = machine.execute(sms.phone_number, to, sms.message)
 
+      send_sms(sms, message)
+    end
+
+    def send_errors(sms)
+      logger.warn "#{sms}: #{sms.errors.values.join(',')}"
+
+      to = (phone_numbers.empty? ? phone_numbers.first[:number] : nil)
+
+      errors = sms.errors.keys.map do |error|
+        machine.execute_action(error, sms.phone_number, to, sms.message)
+      end
+      message = errors.compact.join(' ')
+
+      send_sms(sms, message) unless errors.include?(false)
+    end
+
+    def send_sms(sms, message)
       if message.nil? || message == ''
         log = 'Empty answer'
       else
         modem.send(Biju::Sms.new(
-          phone_number: sms.phone_number, message: message))
-        log = message
+          phone_number: sms.phone_number, message: message[0, 160]))
+        log = "Sent answer \"#{message}\""
       end
 
       logger.info "#{sms}: #{log}"

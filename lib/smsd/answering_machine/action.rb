@@ -10,10 +10,10 @@ module SMSd
 
       def answer(from, to, message)
         case action
-        when String
-          action
         when Proc
           action.call(from, to, message)
+        else
+          action
         end
       end
     end
