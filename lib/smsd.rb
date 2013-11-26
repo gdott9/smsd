@@ -1,5 +1,3 @@
-require 'i18n'
-
 require 'smsd/version'
 require 'smsd/cli'
 require 'smsd/cli/options'
