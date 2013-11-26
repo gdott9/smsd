@@ -12,6 +12,11 @@ module SMSd
           opts.separator ''
           opts.separator 'Specific options:'
 
+          opts.on('-a', '--[no-]alive',
+                  'Send a message to the logger every day') do |alive|
+            options[:alive] = alive
+          end
+
           opts.on('-d', '--[no-]daemonize',
                   'Run in the background') do |daemon|
             options[:daemonize] = daemon

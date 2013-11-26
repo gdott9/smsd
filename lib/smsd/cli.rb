@@ -1,10 +1,11 @@
 require 'biju'
 require 'logger'
+require 'date'
 
 module SMSd
   class CLI
-    attr_accessor :machine
-    attr_reader :modem, :options, :logger
+    attr_accessor :machine, :last_pong
+    attr_reader :modem, :options, :logger, :running_since
 
     def initialize(args = [], &block)
       @options = Options.parse(args)
@@ -19,10 +20,14 @@ module SMSd
     end
 
     def run
+      @running_since = DateTime.now
+
       catch_signals
       Process.daemon if options[:daemonize]
 
       loop do
+        pong if options[:alive]
+
         sleep 5
         break if @terminate
 
@@ -110,6 +115,15 @@ module SMSd
       end
 
       logger.info "#{sms}: #{log}"
+    end
+
+    def pong
+      if last_pong.nil? || last_pong < (DateTime.now - 1)
+        now = DateTime.now
+
+        logger.info "I have been alive for #{(now - running_since).to_f.round} days (#{running_since})."
+        self.last_pong = now
+      end
     end
   end
 end
