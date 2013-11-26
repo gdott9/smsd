@@ -13,6 +13,9 @@ module SMSd
 
       init_logger
       @modem = Biju::Hayes.new(options[:modem], pin: options[:pin])
+    rescue Errno::ENOENT => e
+      logger.warn e.message
+      exit
     end
 
     def run
@@ -34,12 +37,16 @@ module SMSd
     private
 
     def init_logger
-      @logger = Logger.new(
-        Util::MultiIO.new(STDOUT,
-                          File.open(@options[:logfile] || 'smsd.log', 'a')))
+      if @options[:syslog]
+        @logger = Syslog::Logger.new($PROGRAM_NAME)
+      else
+        @logger = Logger.new(
+          Util::MultiIO.new(STDOUT,
+                            File.open(@options[:logfile] || 'smsd.log', 'a')))
 
-      logger.formatter = proc do |severity, datetime, progrname, msg|
-        "#{$PROGRAM_NAME}: #{datetime} [#{severity}] #{msg}\n"
+        logger.formatter = proc do |severity, datetime, progrname, msg|
+          "#{$PROGRAM_NAME}: #{datetime} [#{severity}] #{msg}\n"
+        end
       end
     end
 

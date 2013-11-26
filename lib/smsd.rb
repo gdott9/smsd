@@ -1,3 +1,5 @@
+require 'syslog/logger'
+
 require 'smsd/version'
 require 'smsd/cli'
 require 'smsd/cli/options'

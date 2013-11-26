@@ -21,6 +21,10 @@ module SMSd
             options[:logfile] = logfile
           end
 
+          opts.on('-s', '--[no-]syslog', 'Use syslog as logger') do |syslog|
+            options[:syslog] = syslog
+          end
+
           opts.on('-p', '--pin PIN', 'Specify the SIM PIN') do |pin|
             options[:pin] = pin
           end
