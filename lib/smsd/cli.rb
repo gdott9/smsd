@@ -86,7 +86,7 @@ module SMSd
     end
 
     def send_answer(sms)
-      to = (phone_numbers.empty? ? phone_numbers.first[:number] : nil)
+      to = (!phone_numbers.empty? ? phone_numbers.first[:number] : nil)
       message = machine.execute(sms.phone_number, to, sms.message)
 
       send_sms(sms, message)
@@ -95,7 +95,7 @@ module SMSd
     def send_errors(sms)
       logger.warn "#{sms}: #{sms.errors.values.join(',')}"
 
-      to = (phone_numbers.empty? ? phone_numbers.first[:number] : nil)
+      to = (!phone_numbers.empty? ? phone_numbers.first[:number] : nil)
 
       errors = sms.errors.keys.map do |error|
         machine.execute_action(error, sms.phone_number, to, sms.message)
