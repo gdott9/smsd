@@ -36,6 +36,7 @@ module SMSd
             handle_message sms unless check_number(
               sms.phone_number, sms.type_of_address)
           else
+            modem.delete sms.id
             logger.error sms.to_s
           end
         end
