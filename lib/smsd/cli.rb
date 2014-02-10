@@ -32,8 +32,12 @@ module SMSd
         break if @terminate
 
         modem.messages.each do |sms|
-          handle_message sms unless check_number(
-            sms.phone_number, sms.type_of_address)
+          if sms.is_a?(Biju::Sms)
+            handle_message sms unless check_number(
+              sms.phone_number, sms.type_of_address)
+          else
+            logger.error sms.to_s
+          end
         end
       end
       modem.close
