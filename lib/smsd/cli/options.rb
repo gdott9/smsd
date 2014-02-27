@@ -34,6 +34,11 @@ module SMSd
             options[:pin] = pin
           end
 
+          opts.on('-r', '--redirect-output FILE',
+                  'Redirect stdout and stderr to a file') do |output|
+            options[:output] = output
+          end
+
           opts.separator ''
           opts.separator 'Common options:'
 

@@ -13,6 +13,7 @@ module SMSd
       self.machine = yield block if block_given?
 
       init_logger
+      redirect_output
       @modem = Biju::Hayes.new(options[:modem], pin: options[:pin])
     rescue Errno::ENOENT => e
       logger.warn e.message
@@ -23,7 +24,7 @@ module SMSd
       @running_since = DateTime.now
 
       catch_signals
-      Process.daemon if options[:daemonize]
+      Process.daemon(false, !@options[:output].nil?) if options[:daemonize]
 
       loop do
         pong if options[:alive]
@@ -57,6 +58,14 @@ module SMSd
         logger.formatter = proc do |severity, datetime, progrname, msg|
           "#{$PROGRAM_NAME}: #{datetime} [#{severity}] #{msg}\n"
         end
+      end
+    end
+
+    def redirect_output
+      if @options[:output]
+        output_file = File.new(@options[:output], 'a')
+        $stdout.reopen(output_file)
+        $stderr.reopen(output_file)
       end
     end
 
