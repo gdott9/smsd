@@ -5,7 +5,7 @@ require 'date'
 module SMSd
   class CLI
     attr_accessor :machine, :last_pong
-    attr_reader :modem, :options, :logger, :running_since
+    attr_reader :backend, :options, :logger, :running_since
 
     def initialize(args = [], &block)
       @options = Options.parse(args)
@@ -14,7 +14,7 @@ module SMSd
 
       init_logger
       redirect_output
-      @modem = Biju::Hayes.new(options[:modem], pin: options[:pin])
+      @backend = Backend::Biju.new(options[:modem], pin: options[:pin])
     rescue Errno::ENOENT => e
       logger.warn e.message
       exit
@@ -32,17 +32,11 @@ module SMSd
         sleep 5
         break if @terminate
 
-        modem.messages.each do |sms|
-          if sms.is_a?(Biju::Sms)
-            handle_message sms unless check_number(
-              sms.phone_number, sms.type_of_address)
-          else
-            modem.delete sms.id
-            logger.error sms.to_s
-          end
+        backend.messages.each do |sms|
+          handle_message sms unless check_number(sms.from)
         end
       end
-      modem.close
+      backend.close
     end
 
     private
@@ -75,19 +69,8 @@ module SMSd
       Signal.trap('SIGINT', signal_term)
     end
 
-    def check_number(number, type_of_address)
-      phone_numbers.each do |phone_number|
-        return true if phone_number[:number] == number &&
-          phone_number[:type_of_address] == type_of_address
-      end unless phone_numbers.nil?
-
-      false
-    end
-
-    def phone_numbers
-      @phone_numbers ||= modem.phone_numbers
-    rescue Biju::AT::CmeError
-      []
+    def check_number(number)
+      backend.phone_number == number
     end
 
     def handle_message(sms)
@@ -96,12 +79,11 @@ module SMSd
       else
         send_errors(sms)
       end
-      modem.delete(sms.id)
+      backend.delete sms
     end
 
     def send_answer(sms)
-      to = (!phone_numbers.empty? ? phone_numbers.first[:number] : nil)
-      message = machine.execute(sms.phone_number, to, sms.message)
+      message = machine.execute(sms.from, backend.phone_number, sms.message)
 
       send_sms(sms, message)
     end
@@ -109,10 +91,8 @@ module SMSd
     def send_errors(sms)
       logger.warn "#{sms}: #{sms.errors.values.join(',')}"
 
-      to = (!phone_numbers.empty? ? phone_numbers.first[:number] : nil)
-
       errors = sms.errors.keys.map do |error|
-        machine.execute_action(error, sms.phone_number, to, sms.message)
+        machine.execute_action(error, sms.from, backend.phone_number, sms.message)
       end
       message = errors.compact.join(' ')
 
@@ -123,8 +103,7 @@ module SMSd
       if message.nil? || message == ''
         log = 'Empty answer'
       else
-        modem.send(Biju::Sms.new(
-          phone_number: sms.phone_number, message: message[0, 160]))
+        backend.send(SMS.new(to: sms.from, message: message))
         log = "Sent answer \"#{message}\""
       end
 
